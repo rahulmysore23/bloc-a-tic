@@ -16,6 +16,7 @@ const eventSchema = z.object({
   price: z.number().min(0.001, 'Price must be at least 0.001 ETH'),
   date: z.string().min(1, 'Date is required'),
   time: z.string().min(1, 'Time is required'),
+  category: z.string().min(1, 'Category is required'),
   image: z.any().optional(),
 });
 
@@ -87,6 +88,26 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 text-base p-2"
             />
             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-base font-medium text-gray-900 mb-2">Category</label>
+            <select
+              {...register('category')}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 text-base p-2"
+            >
+              <option value="">Select a category</option>
+              <option value="concert">Concert</option>
+              <option value="show">Show</option>
+              <option value="game">Game</option>
+              <option value="sports">Sports</option>
+              <option value="conference">Conference</option>
+              <option value="festival">Festival</option>
+              <option value="exhibition">Exhibition</option>
+              <option value="workshop">Workshop</option>
+              <option value="other">Other</option>
+            </select>
+            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
           </div>
 
           <div>
