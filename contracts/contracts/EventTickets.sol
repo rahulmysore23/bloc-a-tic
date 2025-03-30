@@ -16,16 +16,31 @@ contract EventTickets is ERC721, Ownable {
         uint256 ticketsSold;
         uint256 eventDate;
         bool isActive;
-        address creator; // Track who created the event
+        address creator;
     }
     
+    struct TicketInfo {
+        uint256 eventId;
+        string eventName;
+        string eventDescription;
+        uint256 eventDate;
+        bool isActive;
+        uint256 price;
+        uint256 maxTickets;
+        uint256 ticketsSold;
+    }
+    
+    // Main mappings
     mapping(uint256 => Event) public events;
     mapping(uint256 => uint256) public ticketToEvent;
-    mapping(uint256 => address) public eventCreators; // Event ID => Creator
+    mapping(uint256 => address) public eventCreators;
+    
+    // New mappings for efficient ticket lookup
+    mapping(address => uint256[]) public userTickets; // user address => array of ticket IDs
+    mapping(uint256 => uint256) public ticketIndex; // ticket ID => index in userTickets array
 
     constructor() ERC721("EventTicket", "TICKET") Ownable(msg.sender) {}
 
-    // Any user can create an event now
     function createEvent(
         string memory _name,
         string memory _description,
@@ -47,7 +62,6 @@ contract EventTickets is ERC721, Ownable {
         eventCreators[eventId] = msg.sender;
     }
 
-    // Only event creator or owner can toggle activity
     function toggleEventActive(uint256 _eventId) external {
         require(
             msg.sender == eventCreators[_eventId] || msg.sender == owner(),
@@ -56,7 +70,6 @@ contract EventTickets is ERC721, Ownable {
         events[_eventId].isActive = !events[_eventId].isActive;
     }
 
-    // Rest of the functions remain the same as before
     function buyTicket(uint256 _eventId, uint256 _quantity) external payable {
         Event storage eventInfo = events[_eventId];
         require(eventInfo.isActive, "Event is not active");
@@ -73,6 +86,10 @@ contract EventTickets is ERC721, Ownable {
             _safeMint(msg.sender, ticketId);
             ticketToEvent[ticketId] = _eventId;
             eventInfo.ticketsSold++;
+            
+            // Add ticket to user's ticket list
+            userTickets[msg.sender].push(ticketId);
+            ticketIndex[ticketId] = userTickets[msg.sender].length - 1;
         }
 
         if (msg.value > totalCost) {
@@ -93,8 +110,6 @@ contract EventTickets is ERC721, Ownable {
         for (uint256 i = 0; i < nextEventId; i++) {
             if (events[i].isActive) {
                 activeEvents[index] = events[i];
-                activeEvents[index].name = events[i].name;
-                activeEvents[index].description = events[i].description;
                 index++;
             }
         }
@@ -105,26 +120,27 @@ contract EventTickets is ERC721, Ownable {
         return events[_eventId];
     }
 
-    function getMyTicketsForEvent(uint256 _eventId) external view returns (uint256[] memory) {
-        uint256 balance = balanceOf(msg.sender);
-        uint256[] memory ticketIds = new uint256[](balance);
-        uint256 counter;
+    function getTicketsByAddress(address _owner) external view returns (TicketInfo[] memory) {
+        uint256[] memory userTicketIds = userTickets[_owner];
+        TicketInfo[] memory result = new TicketInfo[](userTicketIds.length);
         
-        for (uint256 i = 0; i < nextTicketId; i++) {
-            try this.ownerOf(i) returns (address owner) {
-                if (owner == msg.sender && ticketToEvent[i] == _eventId) {
-                    ticketIds[counter] = i;
-                    counter++;
-                }
-            } catch {
-                continue;
-            }
+        for (uint256 i = 0; i < userTicketIds.length; i++) {
+            uint256 ticketId = userTicketIds[i];
+            uint256 eventId = ticketToEvent[ticketId];
+            Event memory eventInfo = events[eventId];
+            
+            result[i] = TicketInfo({
+                eventId: eventId,
+                eventName: eventInfo.name,
+                eventDescription: eventInfo.description,
+                eventDate: eventInfo.eventDate,
+                isActive: eventInfo.isActive,
+                price: eventInfo.price,
+                maxTickets: eventInfo.maxTickets,
+                ticketsSold: eventInfo.ticketsSold
+            });
         }
         
-        uint256[] memory result = new uint256[](counter);
-        for (uint256 i = 0; i < counter; i++) {
-            result[i] = ticketIds[i];
-        }
         return result;
     }
-} 
+}
