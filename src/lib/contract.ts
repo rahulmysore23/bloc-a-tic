@@ -8,7 +8,7 @@ declare global {
 }
 
 
-export const CONTRACT_ADDRESS = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0';
+export const CONTRACT_ADDRESS = '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9';
 
 export function useCreateEvent() {
   const createEvent = async (
@@ -18,7 +18,8 @@ export function useCreateEvent() {
     maxTickets: number,
     eventDate: number,
     location: string,
-    category: string
+    category: string,
+    imageCID: string
   ) => {
     try {
       if (!window.ethereum) {
@@ -36,7 +37,8 @@ export function useCreateEvent() {
         maxTickets,
         eventDate,
         location,
-        category
+        category,
+        imageCID
       );
       
       await tx.wait();

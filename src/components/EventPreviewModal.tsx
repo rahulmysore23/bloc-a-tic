@@ -2,8 +2,10 @@
 
 import { formatEther } from 'ethers';
 import { BuyTicketsModal } from './BuyTicketsModal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { getEventImage } from '@/lib/pinata';
+import Image from 'next/image';
 
 interface Event {
   id: number;
@@ -17,6 +19,7 @@ interface Event {
   creator: string;
   location: string;
   category: string;
+  imageCID: string;
 }
 
 interface EventPreviewModalProps {
@@ -29,11 +32,24 @@ interface EventPreviewModalProps {
 
 export function EventPreviewModal({ isOpen, onClose, event, onBuyTicket, isBuying }: EventPreviewModalProps) {
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
+  const [eventImage, setEventImage] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    const loadEventImage = async () => {
+      try {
+        if (event.imageCID) {
+          const imageUrl = await getEventImage(event.imageCID);
+          setEventImage(imageUrl);
+        }
+      } catch (error) {
+        console.error('Error loading event image:', error);
+      }
+    };
 
-  const isPastEvent = Number(event.eventDate) * 1000 <= Date.now();
-  const availableTickets = Number(event.maxTickets - event.ticketsSold);
+    if (isOpen && event.imageCID) {
+      loadEventImage();
+    }
+  }, [isOpen, event.imageCID]);
 
   const handleBuyClick = () => {
     if (!event || !event.price) {
@@ -44,16 +60,32 @@ export function EventPreviewModal({ isOpen, onClose, event, onBuyTicket, isBuyin
     setIsBuyModalOpen(true);
   };
 
+  const isPastEvent = Number(event.eventDate) * 1000 <= Date.now();
+  const availableTickets = Number(event.maxTickets - event.ticketsSold);
+
+  if (!isOpen) return null;
+
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8 w-full max-w-2xl">
-          <div className="flex justify-between items-center mb-6">
+        <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="flex justify-between items-start mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Event Details</h2>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
               ✕
             </button>
           </div>
+
+          {eventImage && (
+            <div className="relative h-64 w-full mb-6">
+              <Image
+                src={eventImage}
+                alt={event.name}
+                fill
+                className="object-cover rounded-lg"
+              />
+            </div>
+          )}
 
           <div className="space-y-6">
             <div>
