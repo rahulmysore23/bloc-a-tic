@@ -3,12 +3,12 @@
 import { Navigation } from '@/components/Navigation';
 import { CreateEventModal } from '@/components/CreateEventModal';
 import { BuyTicketsModal } from '@/components/BuyTicketsModal';
-import { EventPreviewModal } from '@/components/EventPreviewModal';
 import { useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { useGetEvents, useBuyTicket } from '@/lib/contract';
 import { formatEther } from 'ethers';
 import { toast } from 'react-hot-toast';
+import { EventPreviewModal } from '@/components/EventPreviewModal';
 
 interface Event {
   id: number;
@@ -25,14 +25,18 @@ interface Event {
 export default function Events() {
   const { isConnected } = useAccount();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const { getEvents } = useGetEvents();
   const { buyTicket, isLoading: isBuying } = useBuyTicket();
+
+  // Separate events into upcoming and past
+  const upcomingEvents = events.filter(event => Number(event.eventDate) * 1000 > Date.now());
+  const pastEvents = events.filter(event => Number(event.eventDate) * 1000 <= Date.now());
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -75,6 +79,11 @@ export default function Events() {
       fetchEvents();
     }
   }, [isConnected, getEvents]);
+
+  const handlePreviewClick = (event: Event) => {
+    setSelectedEvent(event);
+    setIsPreviewModalOpen(true);
+  };
 
   const handleBuyClick = (event: Event) => {
     if (!event || !event.price) {
@@ -121,16 +130,6 @@ export default function Events() {
     }
   };
 
-  const handlePreviewClick = (event: Event) => {
-    setSelectedEvent(event);
-    setIsPreviewModalOpen(true);
-  };
-
-  const handlePreviewBuyClick = () => {
-    setIsPreviewModalOpen(false);
-    setIsBuyModalOpen(true);
-  };
-
   if (!isConnected) {
     return (
       <main>
@@ -167,46 +166,88 @@ export default function Events() {
             <h2 className="text-2xl font-bold text-red-900">Error loading events : {error.message}</h2>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {events.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <h3 className="text-lg font-medium text-gray-900">No events available yet</h3>
-                <p className="mt-2 text-sm text-gray-500">Create the first event to get started!</p>
-              </div>
-            ) : (
-              events.map((event: Event) => (
-                <div key={event.id} className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="p-5">
-                    <h3 className="text-lg font-medium text-gray-900">{event.name}</h3>
-                    <p className="mt-2 text-sm text-gray-500">{event.description}</p>
-                    <p className="mt-2 text-sm text-gray-500">
-                      Available Tickets: {Number(event.maxTickets - event.ticketsSold)}
-                    </p>
-                    <p className="mt-2 text-sm text-gray-500">
-                      Price: {event.price ? formatEther(event.price) : '0'} ETH
-                    </p>
-                    <p className="mt-2 text-sm text-gray-500">
-                      Date: {event.eventDate ? new Date(Number(event.eventDate) * 1000).toLocaleString() : 'Not set'}
-                    </p>
-                    <div className="flex space-x-2 mt-4">
-                      <button 
-                        onClick={() => handlePreviewClick(event)}
-                        className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200"
-                      >
-                        Preview
-                      </button>
-                      <button 
-                        onClick={() => handleBuyClick(event)}
-                        disabled={isBuying || Number(event.maxTickets - event.ticketsSold) === 0}
-                        className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isBuying ? 'Processing...' : 'Buy Ticket'}
-                      </button>
-                    </div>
+          <div className="space-y-12">
+            {/* Upcoming Events Section */}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Events</h2>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {upcomingEvents.length === 0 ? (
+                  <div className="col-span-full text-center py-12">
+                    <h3 className="text-lg font-medium text-gray-900">No upcoming events</h3>
+                    <p className="mt-2 text-sm text-gray-500">Create a new event to get started!</p>
                   </div>
-                </div>
-              ))
-            )}
+                ) : (
+                  upcomingEvents.map((event: Event) => (
+                    <div key={event.id} className="bg-white overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <h3 className="text-lg font-medium text-gray-900">{event.name}</h3>
+                        <p className="mt-2 text-sm text-gray-500">{event.description}</p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Available Tickets: {Number(event.maxTickets - event.ticketsSold)}
+                        </p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Price: {event.price ? formatEther(event.price) : '0'} ETH
+                        </p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Date: {event.eventDate ? new Date(Number(event.eventDate) * 1000).toLocaleString() : 'Not set'}
+                        </p>
+                        <div className="mt-4 space-y-2">
+                          <button 
+                            onClick={() => handlePreviewClick(event)}
+                            className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200"
+                          >
+                            Preview Event
+                          </button>
+                          <button 
+                            onClick={() => handleBuyClick(event)}
+                            disabled={isBuying || Number(event.maxTickets - event.ticketsSold) === 0}
+                            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isBuying ? 'Processing...' : 'Buy Ticket'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Past Events Section */}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Past Events</h2>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {pastEvents.length === 0 ? (
+                  <div className="col-span-full text-center py-12">
+                    <h3 className="text-lg font-medium text-gray-900">No past events</h3>
+                  </div>
+                ) : (
+                  pastEvents.map((event: Event) => (
+                    <div key={event.id} className="bg-white overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <h3 className="text-lg font-medium text-gray-900">{event.name}</h3>
+                        <p className="mt-2 text-sm text-gray-500">{event.description}</p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Total Tickets: {Number(event.maxTickets)}
+                        </p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Price: {event.price ? formatEther(event.price) : '0'} ETH
+                        </p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Date: {event.eventDate ? new Date(Number(event.eventDate) * 1000).toLocaleString() : 'Not set'}
+                        </p>
+                        <button 
+                          onClick={() => handlePreviewClick(event)}
+                          className="mt-4 w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200"
+                        >
+                          View Event Details
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -216,6 +257,16 @@ export default function Events() {
       />
       {selectedEvent && (
         <>
+          <EventPreviewModal
+            isOpen={isPreviewModalOpen}
+            onClose={() => {
+              setIsPreviewModalOpen(false);
+              setSelectedEvent(null);
+            }}
+            event={selectedEvent}
+            onBuyTicket={handleBuyTicket}
+            isBuying={isBuying}
+          />
           <BuyTicketsModal
             isOpen={isBuyModalOpen}
             onClose={() => {
@@ -226,16 +277,6 @@ export default function Events() {
             eventName={selectedEvent.name}
             onConfirm={handleBuyTicket}
             isLoading={isBuying}
-          />
-          <EventPreviewModal
-            isOpen={isPreviewModalOpen}
-            onClose={() => {
-              setIsPreviewModalOpen(false);
-              setSelectedEvent(null);
-            }}
-            event={selectedEvent}
-            onBuyClick={handlePreviewBuyClick}
-            isBuying={isBuying}
           />
         </>
       )}
