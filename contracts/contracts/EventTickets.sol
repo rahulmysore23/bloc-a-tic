@@ -19,6 +19,7 @@ contract EventTickets is ERC721, Ownable {
         address creator; // Track who created the event
         string location;    // Added location field
         string category;    // Added category field
+        string imageCID;    // Added imageCID field
     }
     
     struct TicketInfo {
@@ -50,7 +51,8 @@ contract EventTickets is ERC721, Ownable {
         uint256 _maxTickets,
         uint256 _eventDate,
         string memory _location,
-        string memory _category
+        string memory _category,
+        string memory _imageCID
     ) external {
         uint256 eventId = nextEventId++;
         events[eventId] = Event({
@@ -63,7 +65,8 @@ contract EventTickets is ERC721, Ownable {
             isActive: true,
             creator: msg.sender,
             location: _location,
-            category: _category
+            category: _category,
+            imageCID: _imageCID
         });
         eventCreators[eventId] = msg.sender;
     }

@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Image from 'next/image';
 import { useCreateEvent } from '@/lib/contract';
+import { uploadEventImage } from '@/lib/pinata';
 import { toast } from 'react-hot-toast';
 
 const eventSchema = z.object({
@@ -30,6 +31,8 @@ interface CreateEventModalProps {
 
 export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModalProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const { createEvent, isLoading, isSuccess } = useCreateEvent();
   const { register, handleSubmit, formState: { errors }, reset } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
@@ -37,9 +40,32 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
 
   const onSubmit = async (data: EventFormData) => {
     try {
+      if (!selectedFile) {
+        toast.error('Please select an image for the event');
+        return;
+      }
+
+      if (!process.env.NEXT_PUBLIC_PINATA_JWT) {
+        toast.error('Pinata JWT is not configured. Please check your environment variables.');
+        return;
+      }
+
+      setIsUploading(true);
       const eventDate = new Date(`${data.date}T${data.time}`);
       const timestamp = Math.floor(eventDate.getTime() / 1000);
 
+      // Upload image to Pinata
+      const imageCID = await uploadEventImage(selectedFile, {
+        name: data.name,
+        description: data.description,
+        location: data.location,
+        category: data.category,
+        eventDate: timestamp,
+        price: data.price,
+        maxTickets: data.ticketCount
+      });
+
+      // Create event with image CID
       await createEvent(
         data.name,
         data.description,
@@ -47,20 +73,28 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
         data.ticketCount,
         timestamp,
         data.location,
-        data.category
+        data.category,
+        imageCID
       );
 
       toast.success('Event created successfully!');
       await onSuccess();
     } catch (error) {
       console.error('Error creating event:', error);
-      toast.error('Failed to create event. Please try again.');
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to create event. Please try again.');
+      }
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result as string);
@@ -73,14 +107,8 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-900">Create New Event</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">
-            ✕
-          </button>
-        </div>
-        
+      <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold mb-6">Create New Event</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <label className="block text-base font-medium text-gray-900 mb-2">Event Name</label>
@@ -93,26 +121,6 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
           </div>
 
           <div>
-            <label className="block text-base font-medium text-gray-900 mb-2">Category</label>
-            <select
-              {...register('category')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 text-base p-2"
-            >
-              <option value="">Select a category</option>
-              <option value="concert">Concert</option>
-              <option value="show">Show</option>
-              <option value="game">Game</option>
-              <option value="sports">Sports</option>
-              <option value="conference">Conference</option>
-              <option value="festival">Festival</option>
-              <option value="exhibition">Exhibition</option>
-              <option value="workshop">Workshop</option>
-              <option value="other">Other</option>
-            </select>
-            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
-          </div>
-
-          <div>
             <label className="block text-base font-medium text-gray-900 mb-2">Location</label>
             <input
               type="text"
@@ -120,6 +128,16 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 text-base p-2"
             />
             {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-base font-medium text-gray-900 mb-2">Category</label>
+            <input
+              type="text"
+              {...register('category')}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 text-base p-2"
+            />
+            {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
           </div>
 
           <div>
@@ -197,20 +215,20 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
             )}
           </div>
 
-          <div className="flex justify-end space-x-4 mt-8">
+          <div className="flex justify-end space-x-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2.5 border border-gray-300 rounded-md text-gray-900 hover:bg-gray-50 text-base font-medium"
+              className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-base font-medium"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isUploading}
               className="px-6 py-2.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Creating...' : 'Create Event'}
+              {isLoading || isUploading ? 'Creating...' : 'Create Event'}
             </button>
           </div>
         </form>
