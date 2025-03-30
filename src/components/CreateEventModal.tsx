@@ -5,6 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Image from 'next/image';
+import { useCreateEvent } from '@/lib/contract';
+import { toast } from 'react-hot-toast';
 
 const eventSchema = z.object({
   name: z.string().min(1, 'Event name is required'),
@@ -26,15 +28,32 @@ interface CreateEventModalProps {
 
 export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const { createEvent, isLoading, isSuccess } = useCreateEvent();
   const { register, handleSubmit, formState: { errors }, reset } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
   });
 
-  const onSubmit = (data: EventFormData) => {
-    console.log(data);
-    reset();
-    setPreviewImage(null);
-    onClose();
+  const onSubmit = async (data: EventFormData) => {
+    try {
+      // Combine date and time into a Unix timestamp
+      const eventDateTime = new Date(`${data.date}T${data.time}`);
+      const eventTimestamp = Math.floor(eventDateTime.getTime() / 1000);
+
+      await createEvent(
+        data.name,
+        data.description,
+        data.price,
+        data.ticketCount,
+        eventTimestamp
+      );
+      toast.success('Event created successfully!');
+      reset();
+      setPreviewImage(null);
+      onClose();
+    } catch (error) {
+      toast.error('Failed to create event. Please try again.');
+      console.error('Error creating event:', error);
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,9 +185,10 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-base font-medium"
+              disabled={isLoading}
+              className="px-6 py-2.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Event
+              {isLoading ? 'Creating...' : 'Create Event'}
             </button>
           </div>
         </form>

@@ -17,11 +17,66 @@ const { connectors } = getDefaultWallets({
   projectId,
 });
 
+// Create a function to get the current chain configuration
+const getChainConfig = () => {
+  // Get the current chain ID from MetaMask
+  const chainId = typeof window !== 'undefined' 
+    ? parseInt(window.ethereum?.networkVersion || '1')
+    : 1;
+
+  // Create a custom chain configuration for local networks
+  if (chainId === 31337) { // Hardhat local network
+    return {
+      id: 31337,
+      name: 'Localhost',
+      network: 'localhost',
+      nativeCurrency: {
+        name: 'Ether',
+        symbol: 'ETH',
+        decimals: 18,
+      },
+      rpcUrls: {
+        default: { http: ['http://127.0.0.1:8545'] },
+      },
+      blockExplorers: {
+        default: { name: 'Local', url: '' },
+      },
+      testnet: true,
+    };
+  }
+
+  // Return the appropriate chain configuration
+  switch (chainId) {
+    case 1:
+      return mainnet;
+    case 11155111:
+      return sepolia;
+    default:
+      // For any other network, create a custom configuration
+      return {
+        id: chainId,
+        name: `Chain ${chainId}`,
+        network: `chain-${chainId}`,
+        nativeCurrency: {
+          name: 'Ether',
+          symbol: 'ETH',
+          decimals: 18,
+        },
+        rpcUrls: {
+          default: { http: [`https://rpc.ankr.com/eth/${chainId}`] },
+        },
+        blockExplorers: {
+          default: { name: 'Unknown', url: '' },
+        },
+        testnet: chainId !== 1,
+      };
+  }
+};
+
 const config = createConfig({
-  chains: [mainnet, sepolia],
+  chains: [getChainConfig()],
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
+    [getChainConfig().id]: http(),
   },
   connectors,
 });
