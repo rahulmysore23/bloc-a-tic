@@ -3,23 +3,51 @@
 import { Navigation } from '@/components/Navigation';
 import { ViewTicketModal } from '@/components/ViewTicketModal';
 import { useAccount } from 'wagmi';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useGetTicketsByAddress } from '@/lib/contract';
+import { formatEther } from 'ethers';
+import { toast } from 'react-hot-toast';
 
-interface Ticket {
-  id: string;
+interface TicketInfo {
+  eventId: bigint;
   eventName: string;
-  date: string;
-  location: string;
-  description: string;
-  quantity: number;
+  eventDescription: string;
+  eventDate: bigint;
+  isActive: boolean;
+  price: bigint;
+  maxTickets: bigint;
+  ticketsSold: bigint;
 }
 
 export default function OwnedTickets() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<TicketInfo | null>(null);
+  const [tickets, setTickets] = useState<TicketInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { getTicketsByAddress } = useGetTicketsByAddress();
 
-  const handleViewClick = (ticket: Ticket) => {
+  useEffect(() => {
+    const fetchTickets = async () => {
+      if (!address) return;
+      
+      try {
+        const fetchedTickets = await getTicketsByAddress(address);
+        setTickets(fetchedTickets);
+      } catch (error) {
+        console.error('Error fetching tickets:', error);
+        toast.error('Failed to fetch tickets');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (isConnected && address) {
+      fetchTickets();
+    }
+  }, [isConnected, address, getTicketsByAddress]);
+
+  const handleViewClick = (ticket: TicketInfo) => {
     setSelectedTicket(ticket);
     setIsViewModalOpen(true);
   };
@@ -37,25 +65,18 @@ export default function OwnedTickets() {
     );
   }
 
-  // Example tickets data
-  const tickets: Ticket[] = [
-    {
-      id: 'TKT-001',
-      eventName: 'Summer Music Festival',
-      date: 'July 15, 2024',
-      location: 'Central Park, New York',
-      description: 'A day of amazing music featuring top artists from around the world.',
-      quantity: 2,
-    },
-    {
-      id: 'TKT-002',
-      eventName: 'Tech Conference 2024',
-      date: 'August 20, 2024',
-      location: 'Convention Center, San Francisco',
-      description: 'The biggest tech conference of the year with industry leaders.',
-      quantity: 1,
-    },
-  ];
+  if (isLoading) {
+    return (
+      <main>
+        <Navigation />
+        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900">Loading your tickets...</h2>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>
@@ -63,21 +84,38 @@ export default function OwnedTickets() {
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">My Tickets</h1>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {tickets.map((ticket) => (
-            <div key={ticket.id} className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <h3 className="text-lg font-medium text-gray-900">{ticket.eventName}</h3>
-                <p className="mt-2 text-sm text-gray-500">{ticket.date}</p>
-                <p className="mt-2 text-sm text-gray-500">Quantity: {ticket.quantity}</p>
-                <button 
-                  onClick={() => handleViewClick(ticket)}
-                  className="mt-4 w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
-                >
-                  View Details
-                </button>
-              </div>
+          {tickets.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <h3 className="text-lg font-medium text-gray-900">No tickets found</h3>
+              <p className="mt-2 text-sm text-gray-500">You haven't purchased any tickets yet.</p>
             </div>
-          ))}
+          ) : (
+            tickets.map((ticket, index) => (
+              <div key={`${ticket.eventId}-${index}`} className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="p-5">
+                  <h3 className="text-lg font-medium text-gray-900">{ticket.eventName}</h3>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Date: {new Date(Number(ticket.eventDate) * 1000).toLocaleString()}
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Status: {ticket.isActive ? 'Active' : 'Inactive'}
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Price: {formatEther(ticket.price)} ETH
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Tickets Sold: {Number(ticket.ticketsSold)} / {Number(ticket.maxTickets)}
+                  </p>
+                  <button 
+                    onClick={() => handleViewClick(ticket)}
+                    className="mt-4 w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
       {selectedTicket && (
@@ -88,11 +126,11 @@ export default function OwnedTickets() {
             setSelectedTicket(null);
           }}
           eventName={selectedTicket.eventName}
-          date={selectedTicket.date}
-          location={selectedTicket.location}
-          description={selectedTicket.description}
-          quantity={selectedTicket.quantity}
-          ticketId={selectedTicket.id}
+          date={new Date(Number(selectedTicket.eventDate) * 1000).toLocaleString()}
+          location="Event Location" // You might want to add this to the contract
+          description={selectedTicket.eventDescription}
+          quantity={1}
+          ticketId={Number(selectedTicket.eventId).toString()}
         />
       )}
     </main>
