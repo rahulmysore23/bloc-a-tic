@@ -8,7 +8,7 @@ declare global {
 }
 
 
-export const CONTRACT_ADDRESS = '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9';
+export const CONTRACT_ADDRESS = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707';
 
 export function useCreateEvent() {
   const createEvent = async (
@@ -19,7 +19,8 @@ export function useCreateEvent() {
     eventDate: number,
     location: string,
     category: string,
-    imageCID: string
+    imageCID: string,
+    metadataCID: string
   ) => {
     try {
       if (!window.ethereum) {
@@ -38,7 +39,8 @@ export function useCreateEvent() {
         eventDate,
         location,
         category,
-        imageCID
+        imageCID,
+        metadataCID
       );
       
       await tx.wait();
