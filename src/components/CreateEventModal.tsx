@@ -24,9 +24,10 @@ type EventFormData = z.infer<typeof eventSchema>;
 interface CreateEventModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => Promise<void>;
 }
 
-export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
+export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModalProps) {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const { createEvent, isLoading, isSuccess } = useCreateEvent();
   const { register, handleSubmit, formState: { errors }, reset } = useForm<EventFormData>({
@@ -35,24 +36,22 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
 
   const onSubmit = async (data: EventFormData) => {
     try {
-      // Combine date and time into a Unix timestamp
-      const eventDateTime = new Date(`${data.date}T${data.time}`);
-      const eventTimestamp = Math.floor(eventDateTime.getTime() / 1000);
+      const eventDate = new Date(`${data.date}T${data.time}`);
+      const timestamp = Math.floor(eventDate.getTime() / 1000);
 
       await createEvent(
         data.name,
         data.description,
         data.price,
         data.ticketCount,
-        eventTimestamp
+        timestamp
       );
+
       toast.success('Event created successfully!');
-      reset();
-      setPreviewImage(null);
-      onClose();
+      await onSuccess();
     } catch (error) {
-      toast.error('Failed to create event. Please try again.');
       console.error('Error creating event:', error);
+      toast.error('Failed to create event. Please try again.');
     }
   };
 

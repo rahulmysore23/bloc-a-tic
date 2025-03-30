@@ -38,47 +38,49 @@ export default function Events() {
   const upcomingEvents = events.filter(event => Number(event.eventDate) * 1000 > Date.now());
   const pastEvents = events.filter(event => Number(event.eventDate) * 1000 <= Date.now());
 
+  const fetchEvents = async () => {
+    try {
+      setIsLoading(true);
+      const fetchedEvents = await getEvents();
+      console.log('Fetched events:', fetchedEvents);
+      
+      // Map the events to include their IDs and validate data
+      const mappedEvents = fetchedEvents.map((event: any, index: number) => {
+        // Ensure all required fields are present and valid
+        if (!event || typeof event !== 'object') {
+          console.error('Invalid event data:', event);
+          return null;
+        }
+
+        return {
+          id: index,
+          name: event.name || 'Unnamed Event',
+          description: event.description || 'No description available',
+          price: event.price || BigInt(0),
+          maxTickets: event.maxTickets || BigInt(0),
+          ticketsSold: event.ticketsSold || BigInt(0),
+          eventDate: event.eventDate || BigInt(0),
+          isActive: event.isActive ?? true,
+          creator: event.creator || 'Unknown'
+        };
+      }).filter(Boolean); // Remove any null entries
+
+      console.log('Mapped events:', mappedEvents);
+      setEvents(mappedEvents);
+    } catch (err) {
+      console.error('Error fetching events:', err);
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch events only when the page is first visited
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const fetchedEvents = await getEvents();
-        console.log('Fetched events:', fetchedEvents); // Debug log
-        
-        // Map the events to include their IDs and validate data
-        const mappedEvents = fetchedEvents.map((event: any, index: number) => {
-          // Ensure all required fields are present and valid
-          if (!event || typeof event !== 'object') {
-            console.error('Invalid event data:', event);
-            return null;
-          }
-
-          return {
-            id: index,
-            name: event.name || 'Unnamed Event',
-            description: event.description || 'No description available',
-            price: event.price || BigInt(0),
-            maxTickets: event.maxTickets || BigInt(0),
-            ticketsSold: event.ticketsSold || BigInt(0),
-            eventDate: event.eventDate || BigInt(0),
-            isActive: event.isActive ?? true,
-            creator: event.creator || 'Unknown'
-          };
-        }).filter(Boolean); // Remove any null entries
-
-        console.log('Mapped events:', mappedEvents); // Debug log
-        setEvents(mappedEvents);
-      } catch (err) {
-        console.error('Error fetching events:', err);
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (isConnected) {
       fetchEvents();
     }
-  }, [isConnected, getEvents]);
+  }, [isConnected]); // Only run when isConnected changes
 
   const handlePreviewClick = (event: Event) => {
     setSelectedEvent(event);
@@ -117,17 +119,16 @@ export default function Events() {
       setSelectedEvent(null);
       
       // Refresh events after purchase
-      const updatedEvents = await getEvents();
-      const mappedEvents = updatedEvents.map((event: any, index: number) => ({
-        ...event,
-        id: index
-      })).filter(Boolean);
-      
-      setEvents(mappedEvents);
+      await fetchEvents();
     } catch (error) {
       console.error('Error buying ticket:', error);
       toast.error('Failed to purchase ticket. Please try again.');
     }
+  };
+
+  const handleCreateEventSuccess = async () => {
+    setIsCreateModalOpen(false);
+    await fetchEvents(); // Refresh events after creating a new one
   };
 
   if (!isConnected) {
@@ -253,7 +254,8 @@ export default function Events() {
       </div>
       <CreateEventModal 
         isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleCreateEventSuccess}
       />
       {selectedEvent && (
         <>
