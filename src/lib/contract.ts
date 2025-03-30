@@ -7,7 +7,7 @@ declare global {
   }
 }
 
-export const CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+export const CONTRACT_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
 
 export function useCreateEvent() {
   const createEvent = async (
@@ -15,7 +15,9 @@ export function useCreateEvent() {
     description: string,
     price: number,
     maxTickets: number,
-    eventDate: number
+    eventDate: number,
+    location: string,
+    category: string
   ) => {
     try {
       if (!window.ethereum) {
@@ -31,7 +33,9 @@ export function useCreateEvent() {
         description,
         parseEther(price.toString()),
         maxTickets,
-        eventDate
+        eventDate,
+        location,
+        category
       );
       
       await tx.wait();

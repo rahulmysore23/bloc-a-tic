@@ -45,7 +45,9 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
         data.description,
         data.price,
         data.ticketCount,
-        timestamp
+        timestamp,
+        data.location,
+        data.category
       );
 
       toast.success('Event created successfully!');

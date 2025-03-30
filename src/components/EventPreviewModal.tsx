@@ -15,6 +15,8 @@ interface Event {
   eventDate: bigint;
   isActive: boolean;
   creator: string;
+  location: string;
+  category: string;
 }
 
 interface EventPreviewModalProps {
@@ -71,6 +73,14 @@ export function EventPreviewModal({ isOpen, onClose, event, onBuyTicket, isBuyin
                 <p className="mt-1 text-base text-gray-900">
                   {event.price ? formatEther(event.price) : '0'} ETH
                 </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Location</p>
+                <p className="mt-1 text-base text-gray-900">{event.location}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-500">Category</p>
+                <p className="mt-1 text-base text-gray-900">{event.category}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Tickets</p>
