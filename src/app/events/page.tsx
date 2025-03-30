@@ -3,6 +3,7 @@
 import { Navigation } from '@/components/Navigation';
 import { CreateEventModal } from '@/components/CreateEventModal';
 import { BuyTicketsModal } from '@/components/BuyTicketsModal';
+import { EventPreviewModal } from '@/components/EventPreviewModal';
 import { useAccount } from 'wagmi';
 import { useState, useEffect } from 'react';
 import { useGetEvents, useBuyTicket } from '@/lib/contract';
@@ -25,6 +26,7 @@ export default function Events() {
   const { isConnected } = useAccount();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,6 +121,16 @@ export default function Events() {
     }
   };
 
+  const handlePreviewClick = (event: Event) => {
+    setSelectedEvent(event);
+    setIsPreviewModalOpen(true);
+  };
+
+  const handlePreviewBuyClick = () => {
+    setIsPreviewModalOpen(false);
+    setIsBuyModalOpen(true);
+  };
+
   if (!isConnected) {
     return (
       <main>
@@ -176,13 +188,21 @@ export default function Events() {
                     <p className="mt-2 text-sm text-gray-500">
                       Date: {event.eventDate ? new Date(Number(event.eventDate) * 1000).toLocaleString() : 'Not set'}
                     </p>
-                    <button 
-                      onClick={() => handleBuyClick(event)}
-                      disabled={isBuying || Number(event.maxTickets - event.ticketsSold) === 0}
-                      className="mt-4 w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isBuying ? 'Processing...' : 'Buy Ticket'}
-                    </button>
+                    <div className="flex space-x-2 mt-4">
+                      <button 
+                        onClick={() => handlePreviewClick(event)}
+                        className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200"
+                      >
+                        Preview
+                      </button>
+                      <button 
+                        onClick={() => handleBuyClick(event)}
+                        disabled={isBuying || Number(event.maxTickets - event.ticketsSold) === 0}
+                        className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isBuying ? 'Processing...' : 'Buy Ticket'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -195,17 +215,29 @@ export default function Events() {
         onClose={() => setIsCreateModalOpen(false)} 
       />
       {selectedEvent && (
-        <BuyTicketsModal
-          isOpen={isBuyModalOpen}
-          onClose={() => {
-            setIsBuyModalOpen(false);
-            setSelectedEvent(null);
-          }}
-          ticketPrice={Number(formatEther(selectedEvent.price))}
-          eventName={selectedEvent.name}
-          onConfirm={handleBuyTicket}
-          isLoading={isBuying}
-        />
+        <>
+          <BuyTicketsModal
+            isOpen={isBuyModalOpen}
+            onClose={() => {
+              setIsBuyModalOpen(false);
+              setSelectedEvent(null);
+            }}
+            ticketPrice={Number(formatEther(selectedEvent.price))}
+            eventName={selectedEvent.name}
+            onConfirm={handleBuyTicket}
+            isLoading={isBuying}
+          />
+          <EventPreviewModal
+            isOpen={isPreviewModalOpen}
+            onClose={() => {
+              setIsPreviewModalOpen(false);
+              setSelectedEvent(null);
+            }}
+            event={selectedEvent}
+            onBuyClick={handlePreviewBuyClick}
+            isBuying={isBuying}
+          />
+        </>
       )}
     </main>
   );
