@@ -86,8 +86,16 @@ export async function getEventImage(cid: string): Promise<string> {
       return '/placeholder-event.jpg'; // Return a placeholder image path
     }
 
-    // Return the IPFS gateway URL
-    return `${process.env.NEXT_PUBLIC_PINATA_GATEWAY}${cid}`;
+    // Ensure the gateway URL has a protocol
+    const gatewayUrl = process.env.NEXT_PUBLIC_PINATA_GATEWAY || '';
+    const baseUrl = gatewayUrl.startsWith('http') ? gatewayUrl : `https://${gatewayUrl}`;
+    
+    // Remove any trailing slash from the base URL and ensure CID doesn't start with a slash
+    const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+    const cleanCid = cid.replace(/^\//, '');
+    
+    // Return the properly formatted IPFS gateway URL
+    return `${cleanBaseUrl}/ipfs/${cleanCid}`;
   } catch (error) {
     console.error('Error getting image from Pinata:', error);
     if (error instanceof Error) {

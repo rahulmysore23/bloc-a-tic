@@ -9,6 +9,8 @@ import { useGetEvents, useBuyTicket } from '@/lib/contract';
 import { formatEther } from 'ethers';
 import { toast } from 'react-hot-toast';
 import { EventPreviewModal } from '@/components/EventPreviewModal';
+import Image from 'next/image';
+import { getEventImage } from '@/lib/pinata';
 
 interface Event {
   id: number;
@@ -22,6 +24,7 @@ interface Event {
   creator: string;
   location: string;
   category: string;
+  imageCID: string;
 }
 
 export default function Events() {
@@ -35,6 +38,7 @@ export default function Events() {
   const [error, setError] = useState<Error | null>(null);
   const { getEvents } = useGetEvents();
   const { buyTicket, isLoading: isBuying } = useBuyTicket();
+  const [eventImages, setEventImages] = useState<{ [key: number]: string }>({});
 
   // Separate events into upcoming and past
   const upcomingEvents = events.filter(event => Number(event.eventDate) * 1000 > Date.now());
@@ -65,7 +69,8 @@ export default function Events() {
           isActive: event.isActive ?? true,
           creator: event.creator || 'Unknown',
           location: event.location || 'Unknown',
-          category: event.category || 'Unknown'
+          category: event.category || 'Unknown',
+          imageCID: event.imageCID || ''
         };
       }).filter(Boolean); // Remove any null entries
 
@@ -85,6 +90,26 @@ export default function Events() {
       fetchEvents();
     }
   }, [isConnected]); // Only run when isConnected changes
+
+  useEffect(() => {
+    const loadEventImages = async () => {
+      const imagePromises = events.map(async (event) => {
+        if (event.imageCID) {
+          try {
+            const imageUrl = await getEventImage(event.imageCID);
+            setEventImages(prev => ({ ...prev, [event.id]: imageUrl }));
+          } catch (error) {
+            console.error(`Error loading image for event ${event.id}:`, error);
+          }
+        }
+      });
+      await Promise.all(imagePromises);
+    };
+
+    if (events.length > 0) {
+      loadEventImages();
+    }
+  }, [events]);
 
   const handlePreviewClick = (event: Event) => {
     setSelectedEvent(event);
@@ -184,6 +209,16 @@ export default function Events() {
                 ) : (
                   upcomingEvents.map((event: Event) => (
                     <div key={event.id} className="bg-white overflow-hidden shadow rounded-lg">
+                      {eventImages[event.id] && (
+                        <div className="relative h-48 w-full">
+                          <Image
+                            src={eventImages[event.id]}
+                            alt={event.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
                       <div className="p-5">
                         <h3 className="text-lg font-medium text-gray-900">{event.name}</h3>
                         <p className="mt-2 text-sm text-gray-500">{event.description}</p>
@@ -235,6 +270,16 @@ export default function Events() {
                 ) : (
                   pastEvents.map((event: Event) => (
                     <div key={event.id} className="bg-white overflow-hidden shadow rounded-lg">
+                      {eventImages[event.id] && (
+                        <div className="relative h-48 w-full">
+                          <Image
+                            src={eventImages[event.id]}
+                            alt={event.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
                       <div className="p-5">
                         <h3 className="text-lg font-medium text-gray-900">{event.name}</h3>
                         <p className="mt-2 text-sm text-gray-500">{event.description}</p>
