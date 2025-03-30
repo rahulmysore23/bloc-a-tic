@@ -20,6 +20,8 @@ interface Event {
   eventDate: bigint;
   isActive: boolean;
   creator: string;
+  location: string;
+  category: string;
 }
 
 export default function Events() {
@@ -61,7 +63,9 @@ export default function Events() {
           ticketsSold: event.ticketsSold || BigInt(0),
           eventDate: event.eventDate || BigInt(0),
           isActive: event.isActive ?? true,
-          creator: event.creator || 'Unknown'
+          creator: event.creator || 'Unknown',
+          location: event.location || 'Unknown',
+          category: event.category || 'Unknown'
         };
       }).filter(Boolean); // Remove any null entries
 
@@ -184,6 +188,12 @@ export default function Events() {
                         <h3 className="text-lg font-medium text-gray-900">{event.name}</h3>
                         <p className="mt-2 text-sm text-gray-500">{event.description}</p>
                         <p className="mt-2 text-sm text-gray-500">
+                          Category: {event.category}
+                        </p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Location: {event.location}
+                        </p>
+                        <p className="mt-2 text-sm text-gray-500">
                           Available Tickets: {Number(event.maxTickets - event.ticketsSold)}
                         </p>
                         <p className="mt-2 text-sm text-gray-500">
@@ -228,6 +238,12 @@ export default function Events() {
                       <div className="p-5">
                         <h3 className="text-lg font-medium text-gray-900">{event.name}</h3>
                         <p className="mt-2 text-sm text-gray-500">{event.description}</p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Category: {event.category}
+                        </p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Location: {event.location}
+                        </p>
                         <p className="mt-2 text-sm text-gray-500">
                           Total Tickets: {Number(event.maxTickets)}
                         </p>
