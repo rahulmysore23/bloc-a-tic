@@ -7,7 +7,7 @@ interface BuyTicketsModalProps {
   onClose: () => void;
   ticketPrice: number;
   eventName: string;
-  onConfirm: () => Promise<void>;
+  onConfirm: (quantity: number) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -17,6 +17,10 @@ export function BuyTicketsModal({ isOpen, onClose, ticketPrice, eventName, onCon
   if (!isOpen) return null;
 
   const totalPrice = ticketPrice * quantity;
+
+  const handleConfirm = () => {
+    onConfirm(quantity);
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -60,7 +64,7 @@ export function BuyTicketsModal({ isOpen, onClose, ticketPrice, eventName, onCon
             Cancel
           </button>
           <button
-            onClick={onConfirm}
+            onClick={handleConfirm}
             disabled={isLoading}
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >

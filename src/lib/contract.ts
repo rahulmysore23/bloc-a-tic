@@ -75,7 +75,7 @@ export function useGetEvents() {
 }
 
 export function useBuyTicket() {
-  const buyTicket = async (eventId: number, price: number) => {
+  const buyTicket = async (eventId: number, price: number, quantity: number = 1) => {
     try {
       if (!window.ethereum) {
         throw new Error('Please install MetaMask!');
@@ -85,7 +85,7 @@ export function useBuyTicket() {
       const signer = await provider.getSigner();
       const contract = new Contract(CONTRACT_ADDRESS, EventTicketsABI.abi, signer);
 
-      const tx = await contract.buyTicket(eventId, {
+      const tx = await contract.buyTicket(eventId, quantity, {
         value: parseEther(price.toString())
       });
       

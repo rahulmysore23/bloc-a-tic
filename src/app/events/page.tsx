@@ -12,9 +12,13 @@ import { toast } from 'react-hot-toast';
 interface Event {
   id: number;
   name: string;
-  ticketCount: bigint;
+  description: string;
   price: bigint;
-  soldCount: bigint;
+  maxTickets: bigint;
+  ticketsSold: bigint;
+  eventDate: bigint;
+  isActive: boolean;
+  creator: string;
 }
 
 export default function Events() {
@@ -32,8 +36,33 @@ export default function Events() {
     const fetchEvents = async () => {
       try {
         const fetchedEvents = await getEvents();
-        setEvents(fetchedEvents);
+        console.log('Fetched events:', fetchedEvents); // Debug log
+        
+        // Map the events to include their IDs and validate data
+        const mappedEvents = fetchedEvents.map((event: any, index: number) => {
+          // Ensure all required fields are present and valid
+          if (!event || typeof event !== 'object') {
+            console.error('Invalid event data:', event);
+            return null;
+          }
+
+          return {
+            id: index,
+            name: event.name || 'Unnamed Event',
+            description: event.description || 'No description available',
+            price: event.price || BigInt(0),
+            maxTickets: event.maxTickets || BigInt(0),
+            ticketsSold: event.ticketsSold || BigInt(0),
+            eventDate: event.eventDate || BigInt(0),
+            isActive: event.isActive ?? true,
+            creator: event.creator || 'Unknown'
+          };
+        }).filter(Boolean); // Remove any null entries
+
+        console.log('Mapped events:', mappedEvents); // Debug log
+        setEvents(mappedEvents);
       } catch (err) {
+        console.error('Error fetching events:', err);
         setError(err as Error);
       } finally {
         setIsLoading(false);
@@ -46,24 +75,47 @@ export default function Events() {
   }, [isConnected, getEvents]);
 
   const handleBuyClick = (event: Event) => {
+    if (!event || !event.price) {
+      console.error('Invalid event data:', event);
+      toast.error('Invalid event data');
+      return;
+    }
     setSelectedEvent(event);
     setIsBuyModalOpen(true);
   };
 
-  const handleBuyTicket = async () => {
-    if (!selectedEvent) return;
+  const handleBuyTicket = async (quantity: number) => {
+    if (!selectedEvent || !selectedEvent.price) {
+      console.error('Invalid selected event:', selectedEvent);
+      toast.error('Invalid event data');
+      return;
+    }
     
     try {
-      await buyTicket(selectedEvent.id, Number(formatEther(selectedEvent.price)));
+      const totalPrice = Number(formatEther(selectedEvent.price)) * quantity;
+      console.log("Buying ticket:", {
+        eventId: selectedEvent.id,
+        totalPrice,
+        quantity,
+        eventData: selectedEvent
+      });
+      
+      await buyTicket(selectedEvent.id, totalPrice, quantity);
       toast.success('Ticket purchased successfully!');
       setIsBuyModalOpen(false);
       setSelectedEvent(null);
+      
       // Refresh events after purchase
       const updatedEvents = await getEvents();
-      setEvents(updatedEvents);
+      const mappedEvents = updatedEvents.map((event: any, index: number) => ({
+        ...event,
+        id: index
+      })).filter(Boolean);
+      
+      setEvents(mappedEvents);
     } catch (error) {
-      toast.error('Failed to purchase ticket. Please try again.');
       console.error('Error buying ticket:', error);
+      toast.error('Failed to purchase ticket. Please try again.');
     }
   };
 
@@ -111,14 +163,22 @@ export default function Events() {
               </div>
             ) : (
               events.map((event: Event) => (
-                <div key={Number(event.id)} className="bg-white overflow-hidden shadow rounded-lg">
+                <div key={event.id} className="bg-white overflow-hidden shadow rounded-lg">
                   <div className="p-5">
                     <h3 className="text-lg font-medium text-gray-900">{event.name}</h3>
-                    <p className="mt-2 text-sm text-gray-500">Available Tickets: {Number(event.ticketCount - event.soldCount)}</p>
-                    <p className="mt-2 text-sm text-gray-500">Price: {formatEther(event.price)} ETH</p>
+                    <p className="mt-2 text-sm text-gray-500">{event.description}</p>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Available Tickets: {Number(event.maxTickets - event.ticketsSold)}
+                    </p>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Price: {event.price ? formatEther(event.price) : '0'} ETH
+                    </p>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Date: {event.eventDate ? new Date(Number(event.eventDate) * 1000).toLocaleString() : 'Not set'}
+                    </p>
                     <button 
                       onClick={() => handleBuyClick(event)}
-                      disabled={isBuying || Number(event.ticketCount - event.soldCount) === 0}
+                      disabled={isBuying || Number(event.maxTickets - event.ticketsSold) === 0}
                       className="mt-4 w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isBuying ? 'Processing...' : 'Buy Ticket'}
