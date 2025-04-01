@@ -129,7 +129,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
             <input
               type="text"
               {...register('name')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
             />
             {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
           </div>
@@ -138,7 +138,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
             <label className="block text-sm font-medium text-gray-700">Description</label>
             <textarea
               {...register('description')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
               rows={3}
             />
             {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
@@ -149,7 +149,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
             <input
               type="text"
               {...register('location')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
             />
             {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>}
           </div>
@@ -159,7 +159,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
             <input
               type="text"
               {...register('category')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
             />
             {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
           </div>
@@ -170,7 +170,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
               <input
                 type="date"
                 {...register('date')}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
               />
               {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>}
             </div>
@@ -180,7 +180,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
               <input
                 type="time"
                 {...register('time')}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
               />
               {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time.message}</p>}
             </div>
@@ -193,7 +193,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
                 type="number"
                 step="0.001"
                 {...register('price', { valueAsNumber: true })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
               />
               {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>}
             </div>
@@ -203,7 +203,7 @@ export function CreateEventModal({ isOpen, onClose, onSuccess }: CreateEventModa
               <input
                 type="number"
                 {...register('ticketCount', { valueAsNumber: true })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
               />
               {errors.ticketCount && <p className="text-red-500 text-sm mt-1">{errors.ticketCount.message}</p>}
             </div>
