@@ -162,11 +162,19 @@ export default function Events() {
 
   if (!isConnected) {
     return (
-      <main>
+      <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         <Navigation />
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">Please connect your wallet to view events</h2>
+            <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Connect Your Wallet</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              To view and participate in events, please connect your Web3 wallet. This will allow you to create events, purchase tickets, and manage your transactions securely.
+            </p>
           </div>
         </div>
       </main>
@@ -174,80 +182,136 @@ export default function Events() {
   }
 
   return (
-    <main>
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navigation />
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Available Events</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 mb-3">Discover Events</h1>
+            <p className="text-lg text-gray-600 max-w-2xl">
+              Explore exciting events, book tickets, and create your own memorable experiences. All transactions are secure and transparent on the blockchain.
+            </p>
+          </div>
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            className="mt-6 md:mt-0 px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all shadow-md hover:shadow-lg flex items-center space-x-2 group"
           >
-            Create Event
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:rotate-90 transition-transform" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            <span>Create New Event</span>
           </button>
         </div>
 
         {isLoading ? (
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">Loading events...</h2>
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <p className="mt-4 text-gray-600">Loading events...</p>
           </div>
         ) : error ? (
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-red-900">Error loading events : {error.message}</h2>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-red-900 mb-2">Error Loading Events</h2>
+            <p className="text-red-600">{error.message}</p>
           </div>
         ) : (
-          <div className="space-y-12">
+          <div className="space-y-16">
             {/* Upcoming Events Section */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Events</h2>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Upcoming Events</h2>
+                  <p className="text-gray-600 mt-1">Don't miss out on these exciting events</p>
+                </div>
+                <span className="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium">
+                  {upcomingEvents.length} events
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {upcomingEvents.length === 0 ? (
-                  <div className="col-span-full text-center py-12">
-                    <h3 className="text-lg font-medium text-gray-900">No upcoming events</h3>
-                    <p className="mt-2 text-sm text-gray-500">Create a new event to get started!</p>
+                  <div className="col-span-full bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-sm">
+                    <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Upcoming Events</h3>
+                    <p className="text-gray-500 mb-4">Be the first to create an event and start selling tickets!</p>
+                    <button
+                      onClick={() => setIsCreateModalOpen(true)}
+                      className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                      </svg>
+                      Create Event
+                    </button>
                   </div>
                 ) : (
                   upcomingEvents.map((event: Event) => (
-                    <div key={event.id} className="bg-white overflow-hidden shadow rounded-lg">
+                    <div key={event.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
                       {eventImages[event.id] && (
                         <div className="relative h-48 w-full">
                           <Image
                             src={eventImages[event.id]}
                             alt={event.name}
                             fill
-                            className="object-cover"
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
+                          <div className="absolute top-4 right-4">
+                            <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-sm font-medium text-gray-900">
+                              {event.category}
+                            </span>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                            <h3 className="text-xl font-semibold text-white mb-1">{event.name}</h3>
+                            <p className="text-white/90 text-sm line-clamp-1">{event.description}</p>
+                          </div>
                         </div>
                       )}
-                      <div className="p-5">
-                        <h3 className="text-lg font-medium text-gray-900">{event.name}</h3>
-                        <p className="mt-2 text-sm text-gray-500">{event.description}</p>
-                        <p className="mt-2 text-sm text-gray-500">
-                          Category: {event.category}
-                        </p>
-                        <p className="mt-2 text-sm text-gray-500">
-                          Location: {event.location}
-                        </p>
-                        <p className="mt-2 text-sm text-gray-500">
-                          Available Tickets: {Number(event.maxTickets - event.ticketsSold)}
-                        </p>
-                        <p className="mt-2 text-sm text-gray-500">
-                          Price: {event.price ? formatEther(event.price) : '0'} ETH
-                        </p>
-                        <p className="mt-2 text-sm text-gray-500">
-                          Date: {event.eventDate ? new Date(Number(event.eventDate) * 1000).toLocaleString() : 'Not set'}
-                        </p>
-                        <div className="mt-4 space-y-2">
+                      <div className="p-6">
+                        <div className="space-y-3 mb-6">
+                          <div className="flex items-center text-sm text-gray-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            {event.location}
+                          </div>
+                          <div className="flex items-center text-sm text-gray-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                            </svg>
+                            {new Date(Number(event.eventDate) * 1000).toLocaleDateString()}
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center text-gray-500">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                              </svg>
+                              {Number(event.maxTickets - event.ticketsSold)} tickets left
+                            </div>
+                            <div className="font-medium text-indigo-600">
+                              {formatEther(event.price)} ETH
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex space-x-3">
                           <button 
                             onClick={() => handlePreviewClick(event)}
-                            className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200"
+                            className="flex-1 bg-gray-50 text-gray-700 py-2.5 px-4 rounded-xl hover:bg-gray-100 transition-colors text-sm font-medium"
                           >
                             Preview Event
                           </button>
                           <button 
                             onClick={() => handleBuyClick(event)}
                             disabled={isBuying || Number(event.maxTickets - event.ticketsSold) === 0}
-                            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white py-2.5 px-4 rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm hover:shadow-md"
                           >
                             {isBuying ? 'Processing...' : 'Buy Ticket'}
                           </button>
@@ -261,46 +325,82 @@ export default function Events() {
 
             {/* Past Events Section */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Past Events</h2>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Past Events</h2>
+                  <p className="text-gray-600 mt-1">Browse through our event history</p>
+                </div>
+                <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+                  {pastEvents.length} events
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {pastEvents.length === 0 ? (
-                  <div className="col-span-full text-center py-12">
-                    <h3 className="text-lg font-medium text-gray-900">No past events</h3>
+                  <div className="col-span-full bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-sm">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900">No Past Events</h3>
+                    <p className="text-gray-500">Check back later to see event history</p>
                   </div>
                 ) : (
                   pastEvents.map((event: Event) => (
-                    <div key={event.id} className="bg-white overflow-hidden shadow rounded-lg">
+                    <div key={event.id} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100">
                       {eventImages[event.id] && (
                         <div className="relative h-48 w-full">
                           <Image
                             src={eventImages[event.id]}
                             alt={event.name}
                             fill
-                            className="object-cover"
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
+                          <div className="absolute top-4 right-4">
+                            <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-sm font-medium text-gray-900">
+                              {event.category}
+                            </span>
+                          </div>
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <span className="text-white font-medium text-lg">Past Event</span>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                            <h3 className="text-xl font-semibold text-white mb-1">{event.name}</h3>
+                            <p className="text-white/90 text-sm line-clamp-1">{event.description}</p>
+                          </div>
                         </div>
                       )}
-                      <div className="p-5">
-                        <h3 className="text-lg font-medium text-gray-900">{event.name}</h3>
-                        <p className="mt-2 text-sm text-gray-500">{event.description}</p>
-                        <p className="mt-2 text-sm text-gray-500">
-                          Category: {event.category}
-                        </p>
-                        <p className="mt-2 text-sm text-gray-500">
-                          Location: {event.location}
-                        </p>
-                        <p className="mt-2 text-sm text-gray-500">
-                          Total Tickets: {Number(event.maxTickets)}
-                        </p>
-                        <p className="mt-2 text-sm text-gray-500">
-                          Price: {event.price ? formatEther(event.price) : '0'} ETH
-                        </p>
-                        <p className="mt-2 text-sm text-gray-500">
-                          Date: {event.eventDate ? new Date(Number(event.eventDate) * 1000).toLocaleString() : 'Not set'}
-                        </p>
+                      <div className="p-6">
+                        <div className="space-y-3 mb-6">
+                          <div className="flex items-center text-sm text-gray-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                            </svg>
+                            {event.location}
+                          </div>
+                          <div className="flex items-center text-sm text-gray-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                            </svg>
+                            {new Date(Number(event.eventDate) * 1000).toLocaleDateString()}
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center text-gray-500">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                              </svg>
+                              {Number(event.maxTickets)} total tickets
+                            </div>
+                            <div className="font-medium text-indigo-600">
+                              {formatEther(event.price)} ETH
+                            </div>
+                          </div>
+                        </div>
+
                         <button 
                           onClick={() => handlePreviewClick(event)}
-                          className="mt-4 w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200"
+                          className="w-full bg-gray-50 text-gray-700 py-2.5 px-4 rounded-xl hover:bg-gray-100 transition-colors text-sm font-medium"
                         >
                           View Event Details
                         </button>

@@ -67,85 +67,87 @@ export function EventPreviewModal({ isOpen, onClose, event, onBuyTicket, isBuyin
 
   return (
     <>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-start mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Event Details</h2>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-white rounded-2xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="flex justify-between items-start mb-8">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">{event.name}</h2>
+              <p className="mt-2 text-gray-500">{event.category}</p>
+            </div>
+            <button 
+              onClick={onClose} 
+              className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
+            >
               ✕
             </button>
           </div>
 
           {eventImage && (
-            <div className="relative h-64 w-full mb-6">
+            <div className="relative h-80 w-full mb-8 rounded-xl overflow-hidden shadow-lg">
               <Image
                 src={eventImage}
                 alt={event.name}
                 fill
-                className="object-cover rounded-lg"
+                className="object-cover"
               />
             </div>
           )}
 
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900">{event.name}</h3>
-              <p className="mt-2 text-gray-600">{event.description}</p>
+          <div className="space-y-8">
+            <div className="bg-gray-50 p-6 rounded-xl">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">About the Event</h3>
+              <p className="text-gray-600 leading-relaxed">{event.description}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-6">
-              <div>
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                 <p className="text-sm font-medium text-gray-500">Date & Time</p>
-                <p className="mt-1 text-base text-gray-900">
+                <p className="mt-1 text-base font-medium text-gray-900">
                   {event.eventDate ? new Date(Number(event.eventDate) * 1000).toLocaleString() : 'Not set'}
                 </p>
               </div>
-              <div>
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                 <p className="text-sm font-medium text-gray-500">Price</p>
-                <p className="mt-1 text-base text-gray-900">
+                <p className="mt-1 text-base font-medium text-gray-900">
                   {event.price ? formatEther(event.price) : '0'} ETH
                 </p>
               </div>
-              <div>
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                 <p className="text-sm font-medium text-gray-500">Location</p>
-                <p className="mt-1 text-base text-gray-900">{event.location}</p>
+                <p className="mt-1 text-base font-medium text-gray-900">{event.location}</p>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Category</p>
-                <p className="mt-1 text-base text-gray-900">{event.category}</p>
-              </div>
-              <div>
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                 <p className="text-sm font-medium text-gray-500">Total Tickets</p>
-                <p className="mt-1 text-base text-gray-900">{Number(event.maxTickets)}</p>
+                <p className="mt-1 text-base font-medium text-gray-900">{Number(event.maxTickets)}</p>
               </div>
-              <div>
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                 <p className="text-sm font-medium text-gray-500">Tickets Sold</p>
-                <p className="mt-1 text-base text-gray-900">{Number(event.ticketsSold)}</p>
+                <p className="mt-1 text-base font-medium text-gray-900">{Number(event.ticketsSold)}</p>
               </div>
               {!isPastEvent && (
-                <div>
+                <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                   <p className="text-sm font-medium text-gray-500">Available Tickets</p>
-                  <p className="mt-1 text-base text-gray-900">{availableTickets}</p>
+                  <p className="mt-1 text-base font-medium text-gray-900">{availableTickets}</p>
                 </div>
               )}
-              <div>
+              <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                 <p className="text-sm font-medium text-gray-500">Status</p>
-                <p className="mt-1 text-base text-gray-900">
+                <p className="mt-1 text-base font-medium text-gray-900">
                   {isPastEvent ? 'Past Event' : 'Upcoming Event'}
                 </p>
               </div>
             </div>
 
-            <div>
+            <div className="bg-gray-50 p-4 rounded-xl">
               <p className="text-sm font-medium text-gray-500">Event Creator</p>
-              <p className="mt-1 text-base text-gray-900">{event.creator}</p>
+              <p className="mt-1 text-base font-medium text-gray-900">{event.creator}</p>
             </div>
           </div>
 
           <div className="mt-8 flex justify-end space-x-4">
             <button
               onClick={onClose}
-              className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-base font-medium"
+              className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-base font-medium transition-colors"
             >
               Close
             </button>
@@ -153,7 +155,7 @@ export function EventPreviewModal({ isOpen, onClose, event, onBuyTicket, isBuyin
               <button
                 onClick={handleBuyClick}
                 disabled={isBuying || availableTickets === 0}
-                className="px-6 py-2.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg"
               >
                 {isBuying ? 'Processing...' : 'Buy Ticket'}
               </button>
